@@ -9,44 +9,22 @@ using InteractiveUtils
 begin
 	using DrWatson
 	@quickactivate "cac-qrm-phantom"
-	using PlutoUI, Statistics, ImageMorphology, ImageFiltering, CSV, DataFrames, GLM, DICOM, DICOMUtils, PhantomSegmentation, CalciumScoring
+	using PlutoUI, Statistics, ImageMorphology, ImageFiltering, CSV, CSVFiles, DataFrames, GLM, DICOM, DICOMUtils, PhantomSegmentation, CalciumScoring
 	using StatsBase: quantile!
+
+	include(srcdir("masks.jl"))
 end
 
-# ╔═╡ 65c8d3bc-d4ec-44f3-b20a-0cf2f931a1a9
-include(srcdir("masks.jl"))
-
 # ╔═╡ da866599-e426-49d8-bf8b-0038aa0db264
-BASE_PATH = "/Users/daleblack/Library/CloudStorage/GoogleDrive-djblack@uci.edu/My Drive/Datasets/CAC Data"
+BASE_PATH = "/Users/daleblack/Library/CloudStorage/GoogleDrive-djblack@uci.edu/My Drive/Datasets/CAC Data";
 
 # ╔═╡ 58a98b14-521f-48fa-bebd-2275f660d9d8
-VENDORS = ["Canon_Aquilion_One_Vision", "GE_Revolution", "Philips_Brilliance_iCT", "Siemens_SOMATOM_Force"]
-
-# ╔═╡ 94218a58-c19c-42d1-b22f-2aa39394e5f3
-# cal_root = joinpath(dirname(dirname(pwd())), "cac-simulation", "output_new")
-
-# ╔═╡ 7d901382-ffe6-4d77-8622-a602977528d6
-# cal_path = joinpath(cal_root, "calibrations.csv")
-
-# ╔═╡ 67f2154c-2c14-492a-a3dc-64a1201ddc7b
-# cal_df = CSV.read(cal_path, DataFrame)
-
-# ╔═╡ f044de90-0427-4164-98bc-cf828f5f6eb4
-# OUTPUT = "output_new"
-
-# ╔═╡ 8288b069-8e99-4147-90c5-b804c5867bab
-# SAVE_DF = "physical.csv"
+VENDORS = ["Canon_Aquilion_One_Vision", "GE_Revolution", "Philips_Brilliance_iCT", "Siemens_SOMATOM_Force"];
 
 # ╔═╡ ab4af475-a031-42d0-b8b0-f20d06b1ac57
 begin
 	dfs_i = []
 	dfs_a = []
-    high_dens = []
-    med_dens = []
-    low_dens = []
-    high_dens100 = []
-    med_dens50 = []
-    low_dens25 = []
     for VENDOR in VENDORS
 		root_path = joinpath(BASE_PATH, VENDOR)
 		dcm_path_list = dcm_list_builder(root_path)
@@ -186,27 +164,6 @@ begin
 
 			# Calibration Prep
 			kvp = header[(0x0018, 0x0060)]
-			# if kvp == 80.0
-			# 	arr_cal = Array(cal_df[1, 2:end])
-			# 	intensity_array3 = vcat(0, arr_cal)
-			# elseif kvp == 100.0
-			# 	arr_cal = Array(cal_df[2, 2:end])
-			# 	intensity_array3 = vcat(0, arr_cal)
-			# elseif kvp == 120.0
-			# 	arr_cal = Array(cal_df[3, 2:end])
-			# 	intensity_array3 = vcat(0, arr_cal)
-			# end
-						
-			# density_array_calc3 = [
-			# 		0
-			# 		25
-			# 		50
-			# 		100
-			# 		200
-			# 		400
-			# 		800
-			# 	]
-			# df_cal = DataFrame(:density => density_array_calc3, :intensity => intensity_array3)
 			df_cal = DataFrame(:density => [0, 200], :intensity => [0, hu_calcium])
 			linearRegressor = lm(@formula(intensity ~ density), df_cal)
 			linearFit = predict(linearRegressor)
@@ -497,47 +454,21 @@ dfs_i
 # ╔═╡ 594c8fdf-9bc2-4f19-a560-d30bfd436ef9
 dfs_a
 
-# ╔═╡ 4d0acfea-1ee6-4662-8f9e-af09b80f5fc9
+# ╔═╡ bbcd76e3-5111-471c-894c-6310bf24e565
 begin
-	i_path = joinpath(cd(pwd, ".."), OUTPUT, "integrated")
-	if ~isdir(i_path)
-	    mkpath(i_path)
-	end
+	dfs_i_tot = vcat(dfs_i[1:length(dfs_i)]...)
+	save(datadir("output", "integrated", "physical.csv"), dfs_i_tot)
 
-	a_path = joinpath(cd(pwd, ".."), OUTPUT, "agatston")
-	if ~isdir(a_path)
-	    mkpath(a_path)
-	end
+	dfs_a_tot = vcat(dfs_a[1:length(dfs_a)]...)
+	save(datadir("output", "agatston", "physical.csv"), dfs_a_tot)
 end
-
-# ╔═╡ eacaa8e3-615d-4a98-aa5f-68524f3de424
-begin
-	new_df = vcat(dfs_i[1:length(dfs_i)]...)
-    output_path_new = joinpath(i_path, SAVE_DF)
-    CSV.write(output_path_new, new_df)
-
-	new_df = vcat(dfs_a[1:length(dfs_a)]...)
-    output_path_new = joinpath(a_path, SAVE_DF)
-    CSV.write(output_path_new, new_df)
-end
-
-# ╔═╡ 75beba3e-b838-451a-b257-02ed3d26417c
-
 
 # ╔═╡ Cell order:
 # ╠═9a571f4b-c7e0-4281-bd7c-91f1bdad2ada
-# ╠═65c8d3bc-d4ec-44f3-b20a-0cf2f931a1a9
 # ╠═da866599-e426-49d8-bf8b-0038aa0db264
 # ╠═58a98b14-521f-48fa-bebd-2275f660d9d8
-# ╠═94218a58-c19c-42d1-b22f-2aa39394e5f3
-# ╠═7d901382-ffe6-4d77-8622-a602977528d6
-# ╠═67f2154c-2c14-492a-a3dc-64a1201ddc7b
-# ╠═f044de90-0427-4164-98bc-cf828f5f6eb4
-# ╠═8288b069-8e99-4147-90c5-b804c5867bab
 # ╠═ab4af475-a031-42d0-b8b0-f20d06b1ac57
 # ╟─9eb979d2-45f5-4960-bd73-32c469281e67
 # ╠═b91bbb38-3bd8-4a03-9710-8883ac9480f8
 # ╠═594c8fdf-9bc2-4f19-a560-d30bfd436ef9
-# ╠═4d0acfea-1ee6-4662-8f9e-af09b80f5fc9
-# ╠═eacaa8e3-615d-4a98-aa5f-68524f3de424
-# ╠═75beba3e-b838-451a-b257-02ed3d26417c
+# ╠═bbcd76e3-5111-471c-894c-6310bf24e565

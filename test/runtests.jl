@@ -2,7 +2,7 @@ using DrWatson, Test
 @quickactivate "cac-qrm-phantom"
 
 # Here you include files using `srcdir`
-# include(srcdir("file.jl"))
+include(srcdir("masks.jl"))
 
 # Run test suite
 println("Starting tests")
