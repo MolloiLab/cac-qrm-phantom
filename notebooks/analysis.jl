@@ -4,12 +4,14 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ f36e510f-ac3a-4986-bf56-d3b80a068820
+# ╠═╡ show_logs = false
+using DrWatson; @quickactivate "cac-qrm-phantom"
+
 # ╔═╡ d750f7ce-a801-11ed-04b2-1575dfb3a26e
 # ╠═╡ show_logs = false
 begin
-	using DrWatson
-	@quickactivate "cac-qrm-phantom"
-	using PlutoUI, Statistics, CSV, DataFrames, CairoMakie, Colors, GLM, MLJBase
+	using PlutoUI, Statistics, CSV, DataFrames, CairoMakie, Colors, GLM, MLJBase, Printf
 	using StatsBase: quantile!, rmsd
 end
 
@@ -120,7 +122,7 @@ function accuracy()
 		yticks = [0, 25, 50, 75, 100, 125],
 		xlabel = "Known Mass (mg)",
 		ylabel = "Calculated Mass (mg)",
-		title = "Integrated Calcium Scoring",
+		title = "Integrated Calcium Mass",
 	)
 	
 	df = df_i
@@ -305,11 +307,12 @@ function sensitivity_specificity()
 	)
 
     table = [1, 2]
-    heights1 = [
-		(total_zero_i / total_cac) * 100,
-        (num_zero_a / total_cac) * 100,
-    ]
-    barplot!(table, heights1; color=colors[1:2], bar_labels=:y)
+	h1 = (total_zero_i / total_cac) * 100
+	h2 = (num_zero_a / total_cac) * 100 
+	heights1 = [h1, h2]
+	l1 = @sprintf "%.2f" h1
+	l2 = @sprintf "%.2f" h2
+    barplot!(table, heights1; color=colors[1:2], bar_labels=[l1, l2])
 
     ylims!(ax; low=0, high=100)
 
@@ -323,11 +326,12 @@ function sensitivity_specificity()
 	)
 
     table = [1, 2]
-    heights1 = [
-		(total_zero_i_pos / total_cac_pos) * 100,
-        (total_zero_a_pos / total_cac_pos) * 100,
-    ]
-    barplot!(table, heights1; color=colors[1:2], bar_labels=:y)
+	h1 = (total_zero_i_pos / total_cac_pos) * 100
+	h2 = (total_zero_a_pos / total_cac_pos) * 100
+    heights1 = [h1, h2]
+	l1 = @sprintf "%.2f" h1
+	l2 = @sprintf "%.2f" h2
+    barplot!(table, heights1; color=colors[1:2], bar_labels=[l1, l2])
 
     ylims!(ax; low=0, high=100)
 
@@ -350,13 +354,14 @@ with_theme(medphys_theme) do
 end
 
 # ╔═╡ Cell order:
+# ╠═f36e510f-ac3a-4986-bf56-d3b80a068820
 # ╠═d750f7ce-a801-11ed-04b2-1575dfb3a26e
 # ╠═f1ae7024-bc5e-43c0-ad67-d58787f67004
 # ╠═6bd3b773-d4cd-430b-b63a-91cc04ff1c95
 # ╠═c3ee18d6-847b-4eb8-ac80-888a2e69c12f
 # ╠═4f43a4f5-4dd2-4366-ab5b-b8d0089b1dd9
 # ╟─9cf7599f-667f-45cf-a111-95149a7b2b0a
-# ╠═2d2bdc53-e225-4369-a82b-f56ac153263e
+# ╟─2d2bdc53-e225-4369-a82b-f56ac153263e
 # ╟─aa9185b1-e0d6-46db-9867-d6e44bcf70f8
 # ╠═f4579ec7-9013-4ed6-aa32-5fb6a7de82b9
 # ╠═07b01b11-a479-4a1d-88e2-6bb3ce1952c4

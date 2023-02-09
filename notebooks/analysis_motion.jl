@@ -4,11 +4,12 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 40053fbf-fdf0-4c5c-9c42-dcae648e316b
+using DrWatson; @quickactivate "cac-qrm-phantom"
+
 # ╔═╡ 345ed6c8-06a1-4ece-8867-6b5a433fe83c
 # ╠═╡ show_logs = false
 begin
-	using DrWatson
-	@quickactivate "cac-qrm-phantom"
 	using PlutoUI, Statistics, CSV, DataFrames, CairoMakie, Colors, GLM, MLJBase
 	using StatsBase: quantile!, rmsd
 end
@@ -129,11 +130,11 @@ function lin_reg()
     ##-- A --##
 	ax = Axis(
 		f[1, 1],
-		xticks = [0, 25, 50, 75, 100, 125],
-		yticks = [0, 25, 50, 75, 100, 125],
+		xticks = [0, 50, 100, 150, 200],
+		yticks = [0, 50, 100, 150, 200],
 		xlabel = "Known Mass (mg)",
 		ylabel = "Calculated Mass (mg)",
-		title = "Integrated Calcium Scoring",
+		title = "Integrated Calcium Mass",
 	)
 
     df = df_i1
@@ -198,6 +199,7 @@ with_theme(medphys_theme) do
 end
 
 # ╔═╡ Cell order:
+# ╠═40053fbf-fdf0-4c5c-9c42-dcae648e316b
 # ╠═345ed6c8-06a1-4ece-8867-6b5a433fe83c
 # ╠═600bab60-d643-49a6-94c3-77e0eccc727f
 # ╠═7f6c5f2c-58ee-4c53-ba60-02ed0a75cd6f
@@ -205,7 +207,7 @@ end
 # ╠═2f9accf4-0b6d-4f32-9b64-df499fb17d15
 # ╟─7e2f297c-c129-4c99-8ae3-63ea6271f3b0
 # ╟─c1fce9ed-9cdb-4547-b502-e7d3a23187bd
-# ╠═15a2c529-adf3-4d7a-89b7-a80418629507
+# ╟─15a2c529-adf3-4d7a-89b7-a80418629507
 # ╟─41b322e8-f0b1-404d-94de-6910b0f481a0
 # ╠═f65471f2-8f81-46f0-85fe-7aa5b07e1bf6
 # ╠═da76517e-6032-4617-bd86-9f500200fe9d
