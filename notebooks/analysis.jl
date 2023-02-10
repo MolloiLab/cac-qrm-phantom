@@ -173,7 +173,7 @@ function accuracy()
 	        halign = :right)
 	end
 	
-	save(plotsdir("linear_reg.png"), f)
+	save(plotsdir("linear_reg.eps"), f)
 	f
 end
 
@@ -253,6 +253,9 @@ end
 
 # ╔═╡ 273414ff-5e2a-4338-8527-58f0952d52ba
 total_zero_i = sum(false_negative_i)
+
+# ╔═╡ 2abe98b8-91a9-42ed-b18a-192e7922efd2
+total_zero_i, num_zero_a
 
 # ╔═╡ ec1d2254-040f-40de-83b9-6306bc869a89
 md"""
@@ -343,7 +346,7 @@ function sensitivity_specificity()
 	        halign = :right)
 	end
 
-	save(plotsdir("sensitivity_specificity.png"), f)
+	save(plotsdir("sensitivity_specificity.eps"), f)
 
     return f
 end
@@ -352,6 +355,9 @@ end
 with_theme(medphys_theme) do
     sensitivity_specificity()
 end
+
+# ╔═╡ 124809eb-61aa-4151-8608-3907d235560f
+total_zero_i_pos, total_zero_a_pos
 
 # ╔═╡ Cell order:
 # ╠═f36e510f-ac3a-4986-bf56-d3b80a068820
@@ -374,6 +380,8 @@ end
 # ╟─45d93a55-8f32-4a44-bdd7-abac89bb41cc
 # ╟─452d14b2-cc8f-4814-9b0b-679492f8426a
 # ╟─2915b2a1-416e-4365-b0b4-fd2b07c8c1a7
+# ╠═2abe98b8-91a9-42ed-b18a-192e7922efd2
+# ╠═124809eb-61aa-4151-8608-3907d235560f
 # ╟─9dba29d0-0402-48da-94ff-34ef7b64f6e7
 # ╠═781a4de9-6b5b-4791-87f1-25207398fefc
 # ╟─0db59538-fc2f-438c-9d2e-858714ace83b

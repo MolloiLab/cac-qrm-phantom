@@ -506,7 +506,7 @@ function reprod_i_1_2()
             halign=:right)
     end
 	
-	save(plotsdir("repro_i_1_2.png"), f)
+	save(plotsdir("repro_i_1_2.eps"), f)
     f
 end
 
@@ -1683,7 +1683,7 @@ function reprod_a_1_2()
             halign=:right)
     end
 
-	save(plotsdir("repro_a_1_2.png"), f)
+	save(plotsdir("repro_a_1_2.eps"), f)
     f
 end
 

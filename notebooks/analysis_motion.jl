@@ -189,7 +189,7 @@ function lin_reg()
         )
     end
 
-	save(plotsdir("linear_reg_motion.png"), f)
+	save(plotsdir("linear_reg_motion.eps"), f)
     return f
 end
 

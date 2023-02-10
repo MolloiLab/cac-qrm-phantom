@@ -299,7 +299,7 @@ function thickness()
 	Label(f[3, 1:2], "Known Mass (mg)", fontsize = 25)
 	Label(f[1:2, 0], "Calculated Mass (mg)", fontsize = 25, rotation = pi/2)
 
-	save(plotsdir("linear_reg_slice_thickness.png"), f)
+	save(plotsdir("linear_reg_slice_thickness.eps"), f)
     f
 end
 
@@ -526,7 +526,7 @@ function kv()
 	Label(f[3, 1:2], "Known Mass (mg)", fontsize = 25)
 	Label(f[1:2, 0], "Calculated Mass (mg)", fontsize = 25, rotation = pi/2)
 
-	save(plotsdir("linear_reg_kv.png"), f)
+	save(plotsdir("linear_reg_kv.eps"), f)
     f
 end
 
@@ -679,25 +679,13 @@ function ma()
     scatter!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(axtop, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtop, collect(1:1000), pred_ma1i, linestyle=:dashdot)
-    Textbox(
-        f[1, 1],
-        placeholder="y = $(trunc(coma1i[2]; digits=3))x + $(trunc(coma1i[1]; digits=3)) \nr = $(trunc(r2ma1i; digits=3)) \nRMSE: $(trunc(rms_valuesma1i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesma1i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 1], coma1i, r2ma1i, rms_valuesma1i)
 
     xlims!(axtop, low=0, high=125)
     ylims!(axtop, low=0, high=125)
     axtop.xticks = [0, 25, 50, 75, 100, 125]
     axtop.yticks = [0, 25, 50, 75, 100, 125]
-    axtop.xlabel = "Known Mass (mg)"
-    axtop.ylabel = "Calculated Mass (mg)"
     axtop.title = "Integrated (22 mAs)"
-    # hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
 
     ##-- B --##
     axtopright = Axis(f[2, 1])
@@ -708,25 +696,13 @@ function ma()
     scatter!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(axtopright, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtopright, collect(1:1000), pred_ma2i, linestyle=:dashdot)
-    Textbox(
-        f[2, 1],
-        placeholder="y = $(trunc(coma2i[2]; digits=3))x + $(trunc(coma2i[1]; digits=3)) \nr = $(trunc(r2ma2i; digits=3)) \nRMSE: $(trunc(rms_valuesma2i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesma2i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 1], coma2i, r2ma2i, rms_valuesma2i)
 
     xlims!(axtopright, low=0, high=125)
     ylims!(axtopright, low=0, high=125)
     axtopright.xticks = [0, 25, 50, 75, 100, 125]
     axtopright.yticks = [0, 25, 50, 75, 100, 125]
-    axtopright.xlabel = "Known Mass (mg)"
-    axtopright.ylabel = "Calculated Mass (mg)"
     axtopright.title = "Integrated (34 mAs)"
-    # hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
 
     ##-- C --##
     ax3 = Axis(f[1, 2])
@@ -737,25 +713,13 @@ function ma()
     scatter!(ax3, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(ax3, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax3, collect(1:1000), pred_ma1a, linestyle=:dashdot)
-    Textbox(
-        f[1, 2],
-        placeholder="y = $(trunc(coma1a[2]; digits=3))x + $(trunc(coma1a[1]; digits=3)) \nr = $(trunc(r2ma1a; digits=3)) \nRMSE: $(trunc(rms_valuesma1a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesma1a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 2], coma1a, r2ma1a, rms_valuesma1a)
 
     xlims!(ax3, low=0, high=125)
     ylims!(ax3, low=0, high=125)
     ax3.xticks = [0, 25, 50, 75, 100, 125]
     ax3.yticks = [0, 25, 50, 75, 100, 125]
-    ax3.xlabel = "Known Mass (mg)"
-    ax3.ylabel = "Calculated Mass (mg)"
     ax3.title = "Agatston (22 mAs)"
-    # hidedecorations!(ax3, ticklabels=false, ticks=false, label=false)
 
     ##-- D --##
     ax4 = Axis(f[2, 2])
@@ -766,23 +730,12 @@ function ma()
     scatter!(ax4, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(ax4, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax4, collect(1:1000), pred_ma2a, linestyle=:dashdot, label="Fitted Line")
-    Textbox(
-        f[2, 2],
-        placeholder="y = $(trunc(coma2a[2]; digits=3))x + $(trunc(coma2a[1]; digits=3)) \nr = $(trunc(r2ma2a; digits=3)) \nRMSE: $(trunc(rms_valuesma2a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesma2a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 2], coma2a, r2ma2a, rms_valuesma2a)
 
     xlims!(ax4, low=0, high=125)
     ylims!(ax4, low=0, high=125)
     ax4.xticks = [0, 25, 50, 75, 100, 125]
     ax4.yticks = [0, 25, 50, 75, 100, 125]
-    ax4.xlabel = "Known Mass (mg)"
-    ax4.ylabel = "Calculated Mass (mg)"
     ax4.title = "Agatston (34 mAs)"
     # hidedecorations!(ax4, ticklabels=false, ticks=false, label=false)
 
@@ -795,11 +748,13 @@ function ma()
     for (label, layout) in zip(["A", "B", "C", "D"], [f[1, 1], f[2, 1], f[1, 2], f[2, 2]])
         Label(layout[1, 1, TopLeft()], label,
             fontsize=25,
-            padding=(0, -10, 5, 0),
+            padding=(0, 20, 40, 0),
             halign=:right)
     end
 
-    # save("/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-phantom/figures/linear_reg_ma.png", f)
+	Label(f[3, 1:2], "Known Mass (mg)", fontsize = 25)
+	Label(f[1:2, 0], "Calculated Mass (mg)", fontsize = 25, rotation = pi/2)
+	
     f
 end
 
@@ -947,25 +902,13 @@ function fov()
     scatter!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(axtop, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtop, collect(1:1000), pred_fov1i, linestyle=:dashdot)
-    Textbox(
-        f[1, 1],
-        placeholder="y = $(trunc(cofov1i[2]; digits=3))x + $(trunc(cofov1i[1]; digits=3)) \nr = $(trunc(r2fov1i; digits=3)) \nRMSE: $(trunc(rms_valuesfov1i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesfov1i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 1], cofov1i, r2fov1i, rms_valuesfov1i)
 
     xlims!(axtop, low=0, high=125)
     ylims!(axtop, low=0, high=125)
     axtop.xticks = [0, 25, 50, 75, 100, 125]
     axtop.yticks = [0, 25, 50, 75, 100, 125]
-    axtop.xlabel = "Known Mass (mg)"
-    axtop.ylabel = "Calculated Mass (mg)"
     axtop.title = "Integrated (FOV 200)"
-    # hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
 
     ##-- B --##
     axtopright = Axis(f[2, 1])
@@ -976,25 +919,13 @@ function fov()
     scatter!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(axtopright, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtopright, collect(1:1000), pred_fov2i, linestyle=:dashdot)
-    Textbox(
-        f[2, 1],
-        placeholder="y = $(trunc(cofov2i[2]; digits=3))x + $(trunc(cofov2i[1]; digits=3)) \nr = $(trunc(r2fov2i; digits=3)) \nRMSE: $(trunc(rms_valuesfov2i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesfov2i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 1], cofov2i, r2fov2i, rms_valuesfov2i)
 
     xlims!(axtopright, low=0, high=125)
     ylims!(axtopright, low=0, high=125)
     axtopright.xticks = [0, 25, 50, 75, 100, 125]
     axtopright.yticks = [0, 25, 50, 75, 100, 125]
-    axtopright.xlabel = "Known Mass (mg)"
-    axtopright.ylabel = "Calculated Mass (mg)"
     axtopright.title = "Integrated (FOV 320)"
-    # hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
 
     ##-- C --##
     ax3 = Axis(f[1, 2])
@@ -1005,25 +936,13 @@ function fov()
     scatter!(ax3, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(ax3, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax3, collect(1:1000), pred_fov1a, linestyle=:dashdot)
-    Textbox(
-        f[1, 2],
-        placeholder="y = $(trunc(cofov1a[2]; digits=3))x + $(trunc(cofov1a[1]; digits=3)) \nr = $(trunc(r2fov1a; digits=3)) \nRMSE: $(trunc(rms_valuesfov1a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesfov1a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 2], cofov1a, r2fov1a, rms_valuesfov1a)
 
     xlims!(ax3, low=0, high=125)
     ylims!(ax3, low=0, high=125)
     ax3.xticks = [0, 25, 50, 75, 100, 125]
     ax3.yticks = [0, 25, 50, 75, 100, 125]
-    ax3.xlabel = "Known Mass (mg)"
-    ax3.ylabel = "Calculated Mass (mg)"
     ax3.title = "Agatston (FOV 200)"
-    # hidedecorations!(ax3, ticklabels=false, ticks=false, label=false)
 
     ##-- D --##
     ax4 = Axis(f[2, 2])
@@ -1034,25 +953,13 @@ function fov()
     scatter!(ax4, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(ax4, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax4, collect(1:1000), pred_fov2i, linestyle=:dashdot, label="Fitted Line")
-    Textbox(
-        f[2, 2],
-        placeholder="y = $(trunc(cofov2a[2]; digits=3))x + $(trunc(cofov2a[1]; digits=3)) \nr = $(trunc(r2fov2a; digits=3)) \nRMSE: $(trunc(rms_valuesfov2a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesfov2a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 2], cofov2a, r2fov2a, rms_valuesfov2a)
 
     xlims!(ax4, low=0, high=125)
     ylims!(ax4, low=0, high=125)
     ax4.xticks = [0, 25, 50, 75, 100, 125]
     ax4.yticks = [0, 25, 50, 75, 100, 125]
-    ax4.xlabel = "Known Mass (mg)"
-    ax4.ylabel = "Calculated Mass (mg)"
     ax4.title = "Agatston (FOV 320)"
-    # hidedecorations!(ax4, ticklabels=false, ticks=false, label=false)
 
     ##-- LABELS --##
     f[1:2, 3] = Legend(f, ax4, framevisible=false)
@@ -1063,11 +970,13 @@ function fov()
     for (label, layout) in zip(["A", "B", "C", "D"], [f[1, 1], f[2, 1], f[1, 2], f[2, 2]])
         Label(layout[1, 1, TopLeft()], label,
             fontsize=25,
-            padding=(0, -10, 5, 0),
+            padding=(0, 20, 40, 0),
             halign=:right)
     end
 
-    # save("/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-phantom/figures/linear_reg_fov.png", f)
+	Label(f[3, 1:2], "Known Mass (mg)", fontsize = 25)
+	Label(f[1:2, 0], "Calculated Mass (mg)", fontsize = 25, rotation = pi/2)
+	
     f
 end
 
@@ -1220,25 +1129,13 @@ function ir()
     scatter!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(axtop, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtop, collect(1:1000), pred_ir1i, linestyle=:dashdot)
-    Textbox(
-        f[1, 1],
-        placeholder="y = $(trunc(coir1i[2]; digits=3))x + $(trunc(coir1i[1]; digits=3)) \nr = $(trunc(r2ir1i; digits=3)) \nRMSE: $(trunc(rms_valuesir1i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesir1i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 1], coir1i, r2ir1i, rms_valuesir1i)
 
     xlims!(axtop, low=0, high=125)
     ylims!(axtop, low=0, high=125)
     axtop.xticks = [0, 25, 50, 75, 100, 125]
     axtop.yticks = [0, 25, 50, 75, 100, 125]
-    axtop.xlabel = "Known Mass (mg)"
-    axtop.ylabel = "Calculated Mass (mg)"
     axtop.title = "Integrated (IR 2)"
-    # hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
 
     ##-- B --##
     axtopright = Axis(f[2, 1])
@@ -1249,25 +1146,13 @@ function ir()
     scatter!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(axtopright, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtopright, collect(1:1000), pred_ir2i, linestyle=:dashdot)
-    Textbox(
-        f[2, 1],
-        placeholder="y = $(trunc(coir2i[2]; digits=3))x + $(trunc(coir2i[1]; digits=3)) \nr = $(trunc(r2ir2i; digits=3)) \nRMSE: $(trunc(rms_valuesir2i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesir2i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 1], coir2i, r2ir2i, rms_valuesir2i)
 
     xlims!(axtopright, low=0, high=125)
     ylims!(axtopright, low=0, high=125)
     axtopright.xticks = [0, 25, 50, 75, 100, 125]
     axtopright.yticks = [0, 25, 50, 75, 100, 125]
-    axtopright.xlabel = "Known Mass (mg)"
-    axtopright.ylabel = "Calculated Mass (mg)"
     axtopright.title = "Integrated (IR 4)"
-    # hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
 
     ##-- C --##
     ax3 = Axis(f[1, 2])
@@ -1278,25 +1163,13 @@ function ir()
     scatter!(ax3, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(ax3, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax3, collect(1:1000), pred_ir1a, linestyle=:dashdot)
-    Textbox(
-        f[1, 2],
-        placeholder="y = $(trunc(coir1a[2]; digits=3))x + $(trunc(coir1a[1]; digits=3)) \nr = $(trunc(r2ir1a; digits=3)) \nRMSE: $(trunc(rms_valuesir1a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesir1a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 2], coir1a, r2ir1a, rms_valuesir1a)
 
     xlims!(ax3, low=0, high=125)
     ylims!(ax3, low=0, high=125)
     ax3.xticks = [0, 25, 50, 75, 100, 125]
     ax3.yticks = [0, 25, 50, 75, 100, 125]
-    ax3.xlabel = "Known Mass (mg)"
-    ax3.ylabel = "Calculated Mass (mg)"
     ax3.title = "Agatston (IR 2)"
-    # hidedecorations!(ax3, ticklabels=false, ticks=false, label=false)
 
     ##-- D --##
     ax4 = Axis(f[2, 2])
@@ -1307,25 +1180,13 @@ function ir()
     scatter!(ax4, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(ax4, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax4, collect(1:1000), pred_ir2a, linestyle=:dashdot, label="Fitted Line")
-    Textbox(
-        f[2, 2],
-        placeholder="y = $(trunc(coir2a[2]; digits=3))x + $(trunc(coir2a[1]; digits=3)) \nr = $(trunc(r2ir2a; digits=3)) \nRMSE: $(trunc(rms_valuesir2a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesir2a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 2], coir2a, r2ir2a, rms_valuesir2a)
 
     xlims!(ax4, low=0, high=125)
     ylims!(ax4, low=0, high=125)
     ax4.xticks = [0, 25, 50, 75, 100, 125]
     ax4.yticks = [0, 25, 50, 75, 100, 125]
-    ax4.xlabel = "Known Mass (mg)"
-    ax4.ylabel = "Calculated Mass (mg)"
     ax4.title = "Agatston (IR 4)"
-    # hidedecorations!(ax4, ticklabels=false, ticks=false, label=false)
 
     ##-- LABELS --##
     f[1:2, 3] = Legend(f, ax4, framevisible=false)
@@ -1336,11 +1197,13 @@ function ir()
     for (label, layout) in zip(["A", "B", "C", "D"], [f[1, 1], f[2, 1], f[1, 2], f[2, 2]])
         Label(layout[1, 1, TopLeft()], label,
             fontsize=25,
-            padding=(0, -10, 5, 0),
+            padding=(0, 20, 40, 0),
             halign=:right)
     end
 
-    # save("/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-phantom/figures/linear_reg_ir.png", f)
+	Label(f[3, 1:2], "Known Mass (mg)", fontsize = 25)
+	Label(f[1:2, 0], "Calculated Mass (mg)", fontsize = 25, rotation = pi/2)
+	
     f
 end
 
@@ -1493,25 +1356,13 @@ function qr()
     scatter!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(axtop, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtop, collect(1:1000), pred_qr1i, linestyle=:dashdot)
-    Textbox(
-        f[1, 1],
-        placeholder="y = $(trunc(coqr1i[2]; digits=3))x + $(trunc(coqr1i[1]; digits=3)) \nr = $(trunc(r2qr1i; digits=3)) \nRMSE: $(trunc(rms_valuesqr1i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesqr1i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 1], coqr1i, r2qr1i, rms_valuesqr1i)
 
     xlims!(axtop, low=0, high=125)
     ylims!(axtop, low=0, high=125)
     axtop.xticks = [0, 25, 50, 75, 100, 125]
     axtop.yticks = [0, 25, 50, 75, 100, 125]
-    axtop.xlabel = "Known Mass (mg)"
-    axtop.ylabel = "Calculated Mass (mg)"
     axtop.title = "Integrated (QR 32)"
-    # hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
 
     ##-- B --##
     axtopright = Axis(f[2, 1])
@@ -1522,25 +1373,13 @@ function qr()
     scatter!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(axtopright, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(axtopright, collect(1:1000), pred_qr2i, linestyle=:dashdot)
-    Textbox(
-        f[2, 1],
-        placeholder="y = $(trunc(coqr2i[2]; digits=3))x + $(trunc(coqr2i[1]; digits=3)) \nr = $(trunc(r2qr2i; digits=3)) \nRMSE: $(trunc(rms_valuesqr2i[1]; digits=3)) \nRMSD: $(trunc(rms_valuesqr2i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 1], coqr2i, r2qr2i, rms_valuesqr2i)
 
     xlims!(axtopright, low=0, high=125)
     ylims!(axtopright, low=0, high=125)
     axtopright.xticks = [0, 25, 50, 75, 100, 125]
     axtopright.yticks = [0, 25, 50, 75, 100, 125]
-    axtopright.xlabel = "Known Mass (mg)"
-    axtopright.ylabel = "Calculated Mass (mg)"
     axtopright.title = "Integrated (QR 44)"
-    # hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
 
     ##-- C --##
     ax3 = Axis(f[1, 2])
@@ -1551,25 +1390,13 @@ function qr()
     scatter!(ax3, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
     lines!(ax3, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax3, collect(1:1000), pred_qr1a, linestyle=:dashdot)
-    Textbox(
-        f[1, 2],
-        placeholder="y = $(trunc(coqr1a[2]; digits=3))x + $(trunc(coqr1a[1]; digits=3)) \nr = $(trunc(r2qr1a; digits=3)) \nRMSE: $(trunc(rms_valuesqr1a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesqr1a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[1, 2], coqr1a, r2qr1a, rms_valuesqr1a)
 
     xlims!(ax3, low=0, high=125)
     ylims!(ax3, low=0, high=125)
     ax3.xticks = [0, 25, 50, 75, 100, 125]
     ax3.yticks = [0, 25, 50, 75, 100, 125]
-    ax3.xlabel = "Known Mass (mg)"
-    ax3.ylabel = "Calculated Mass (mg)"
     ax3.title = "Agatston (QR 32)"
-    # hidedecorations!(ax3, ticklabels=false, ticks=false, label=false)
 
     ##-- D --##
     ax4 = Axis(f[2, 2])
@@ -1580,25 +1407,13 @@ function qr()
     scatter!(ax4, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
     lines!(ax4, [-1000, 1000], [-1000, 1000], label="Unity")
     lines!(ax4, collect(1:1000), pred_qr2a, linestyle=:dashdot, label="Fitted Line")
-    Textbox(
-        f[2, 2],
-        placeholder="y = $(trunc(coqr2a[2]; digits=3))x + $(trunc(coqr2a[1]; digits=3)) \nr = $(trunc(r2qr2a; digits=3)) \nRMSE: $(trunc(rms_valuesqr2a[1]; digits=3)) \nRMSD: $(trunc(rms_valuesqr2a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12
-    )
+	create_textbox(f[2, 2], coqr2a, r2qr2a, rms_valuesqr2a)
 
     xlims!(ax4, low=0, high=125)
     ylims!(ax4, low=0, high=125)
     ax4.xticks = [0, 25, 50, 75, 100, 125]
     ax4.yticks = [0, 25, 50, 75, 100, 125]
-    ax4.xlabel = "Known Mass (mg)"
-    ax4.ylabel = "Calculated Mass (mg)"
-    ax4.title = "Agatston (IR 4)"
-    # hidedecorations!(ax4, ticklabels=false, ticks=false, label=false)
+    ax4.title = "Agatston (QR 44)"
 
     ##-- LABELS --##
     f[1:2, 3] = Legend(f, ax4, framevisible=false)
@@ -1609,11 +1424,13 @@ function qr()
     for (label, layout) in zip(["A", "B", "C", "D"], [f[1, 1], f[2, 1], f[1, 2], f[2, 2]])
         Label(layout[1, 1, TopLeft()], label,
             fontsize=25,
-            padding=(0, -10, 5, 0),
+            padding=(0, 20, 40, 0),
             halign=:right)
     end
 
-    # save("/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-phantom/figures/linear_reg_qr.png", f)
+	Label(f[3, 1:2], "Known Mass (mg)", fontsize = 25)
+	Label(f[1:2, 0], "Calculated Mass (mg)", fontsize = 25, rotation = pi/2)
+	
     f
 end
 
@@ -1621,6 +1438,14 @@ end
 with_theme(medphys_theme) do
     qr()
 end
+
+# ╔═╡ c32143a2-31db-4f65-9847-93691cf5f989
+md"""
+## Average
+"""
+
+# ╔═╡ c03730d9-eedd-4f1c-a30b-0d7289b1a22d
+df_thic
 
 # ╔═╡ Cell order:
 # ╠═665791ce-e039-49ed-9eaa-2a064cee02ab
@@ -1683,7 +1508,7 @@ end
 # ╠═15ecfa8b-c199-4cb7-ac40-4afca1927269
 # ╠═e007c9e4-3339-4df6-ab29-99db3e499175
 # ╠═82e7ad37-da7f-4da1-afec-f99da385d5c7
-# ╟─0999a0dc-43da-42ae-8b9e-95b2d36a52e5
+# ╠═0999a0dc-43da-42ae-8b9e-95b2d36a52e5
 # ╟─cf9477ab-db0b-4de6-8980-06b9aba4846a
 # ╟─c20aec32-8a49-465d-bf3d-93f8622033f4
 # ╠═38bd180e-f76e-4d31-b43c-c81472aea052
@@ -1699,7 +1524,7 @@ end
 # ╠═90088f65-8c81-4a97-970b-5532744b8982
 # ╠═ee42ed78-0822-4349-a983-9654f57383b0
 # ╠═6b1707e5-a19a-4fd6-b042-73c6443184ef
-# ╟─5080cf77-a567-4214-9dd5-fdae43b64759
+# ╠═5080cf77-a567-4214-9dd5-fdae43b64759
 # ╟─3cab42ea-b6f8-493a-abda-08b8e42c5b87
 # ╟─f96d6ce0-e583-4994-bd20-1d33fd90a9d4
 # ╟─6f7684bb-a22b-46b4-ab0b-2a7df37c07dc
@@ -1716,7 +1541,7 @@ end
 # ╠═97bc0d26-e753-492c-b81a-649b1a28c4d1
 # ╠═1ea8006a-f869-4ae4-8acf-618a6d2c00de
 # ╠═f67f8253-28ed-4c74-aa25-b72a04870623
-# ╟─dc4620ac-6e82-4d53-85f8-7c8a99f4ec70
+# ╠═dc4620ac-6e82-4d53-85f8-7c8a99f4ec70
 # ╟─c81387d6-0b9d-41ea-9782-90f877fdcb94
 # ╟─ce61ccb7-4cfa-4905-b366-65985707a3ad
 # ╟─301db02a-5647-4851-869c-ec48781b01f0
@@ -1735,3 +1560,5 @@ end
 # ╠═3b6f1284-806a-4f88-bec1-6e00766fe8d7
 # ╟─c22f8a48-fe76-4773-94e2-36241d06a545
 # ╟─93d64a98-8759-40d5-ad39-9d7cba23f537
+# ╟─c32143a2-31db-4f65-9847-93691cf5f989
+# ╠═c03730d9-eedd-4f1c-a30b-0d7289b1a22d
