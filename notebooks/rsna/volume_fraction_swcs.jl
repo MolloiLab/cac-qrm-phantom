@@ -4,37 +4,38 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ ebdb7a8d-4c29-4d3e-8e4c-251094d0dff6
+# ╔═╡ 71942d1f-004f-4edc-af24-9a3d151679f3
 # ╠═╡ show_logs = false
-using DrWatson; 
+using DrWatson
 
-# ╔═╡ 90ed04ab-5831-40ee-bc0b-e11a21f2f402
+# ╔═╡ 05e5f4f8-9a11-40fb-9e4b-e15312ee6d59
 # ╠═╡ show_logs = false
 @quickactivate "cac-qrm-phantom"
 
-# ╔═╡ aa878542-adf8-49c0-b17d-aef779d0ba3e
+# ╔═╡ 800ad242-ede0-41ae-96b2-919fd369c302
 # ╠═╡ show_logs = false
 begin
 	using PlutoUI, Statistics, ImageMorphology, ImageFiltering, CSV, CSVFiles, DataFrames, GLM, DICOM, DICOMUtils, PhantomSegmentation, CalciumScoring
 	using StatsBase: quantile!
 end
 
-# ╔═╡ f3b7ddf8-7d0f-4874-b71b-3f4e06b0a339
+# ╔═╡ b5eb5c10-b8ab-4e75-8901-bf29f3eefeeb
 include(srcdir("masks.jl"));
 
-# ╔═╡ 88e44dae-e8f7-4bb6-bb98-6d5bc5b7b1f2
+# ╔═╡ a0175742-d5d6-40a1-af64-f291ba962bb5
 TableOfContents()
 
-# ╔═╡ da866599-e426-49d8-bf8b-0038aa0db264
+# ╔═╡ 8932ed56-e47b-4f01-a417-f68a07ac2f47
 BASE_PATH = "/Users/daleblack/Library/CloudStorage/GoogleDrive-djblack@uci.edu/My Drive/Datasets/CAC Data";
 
-# ╔═╡ 58a98b14-521f-48fa-bebd-2275f660d9d8
+# ╔═╡ 31480286-9ca0-468f-893d-3f59600d2e16
 VENDORS = ["Canon_Aquilion_One_Vision", "GE_Revolution", "Philips_Brilliance_iCT", "Siemens_SOMATOM_Force"];
 
-# ╔═╡ ab4af475-a031-42d0-b8b0-f20d06b1ac57
+# ╔═╡ 624dec30-100b-4ebf-9b69-8507635ab1f1
 begin
-    dfs_i = []
+    dfs_vf = []
     dfs_a = []
+	dfs_s = []
     for VENDOR in VENDORS
         root_path = joinpath(BASE_PATH, VENDOR)
         dcm_path_list = dcm_list_builder(root_path)
@@ -60,6 +61,7 @@ begin
             arr = masked_array[:, :, slice_CCI-2:slice_CCI+2]
             single_arr = masked_array[:, :, slice_CCI]
             pixel_size = DICOMUtils.get_pixel_size(header)
+			voxel_size = pixel_size[1] * pixel_size[2] * pixel_size[3]
 
             # Segmentations
             ## Background
@@ -171,98 +173,58 @@ begin
             bool_arr = array_filtered .> 0
             bool_arr_erode = erode(erode(erode(erode(erode(bool_arr)))))
             hu_calcium = mean(c_img[bool_arr_erode])
+			ρ_calcium = 0.2
 
-            # Calibration Prep
-            kvp = header[(0x0018, 0x0060)]
-            df_cal = DataFrame(:density => [0, 200], :intensity => [0, hu_calcium])
-            linearRegressor = lm(@formula(intensity ~ density), df_cal)
-            linearFit = predict(linearRegressor)
-            m = linearRegressor.model.pp.beta0[2]
-            b = linearRegressor.model.rr.mu[1]
-            density(intensity) = (intensity - b) / m
-            intensity(ρ) = m * ρ + b
-            pixel_size = DICOMUtils.get_pixel_size(header)
+			# Background
+			hu_heart_tissue_large_bkg = mean(arr[ring_mask_L_bkg])
+			mass_large_bkg = score(arr[dilated_mask_L_bkg], hu_calcium, hu_heart_tissue_large_bkg, voxel_size, ρ_calcium, VolumeFraction())
 
-            # Score background
-            S_Obj_bkg = intensity(200)
-            ρ_bkg = 0.2 # mg/mm^3
+			hu_heart_tissue_medium_bkg = mean(arr[ring_mask_M_bkg])
+			mass_medium_bkg = score(arr[dilated_mask_M_bkg], hu_calcium, hu_heart_tissue_medium_bkg, voxel_size, ρ_calcium, VolumeFraction())
 
-            S_bkg_large = mean(arr[ring_mask_L_bkg])
-            alg_bkg_large = Integrated(arr[dilated_mask_L_bkg])
-            mass_large_bkg = score(S_bkg_large, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg_large)
+			hu_heart_tissue_small_bkg = mean(arr[ring_mask_S_bkg])
+			mass_small_bkg = score(arr[dilated_mask_S_bkg], hu_calcium, hu_heart_tissue_small_bkg, voxel_size, ρ_calcium, VolumeFraction())
 
-            S_bkg_medium = mean(arr[ring_mask_M_bkg])
-            alg_bkg_medium = Integrated(arr[dilated_mask_M_bkg])
-            mass_medium_bkg = score(S_bkg_medium, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg_medium)
+			mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
 
-            S_bkg_small = mean(arr[ring_mask_S_bkg])
-            alg_bkg_small = Integrated(arr[dilated_mask_S_bkg])
-            mass_small_bkg = score(S_bkg_small, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg_small)
+			# Score Large Inserts
+			## High Density
+			hu_heart_tissue_large_hd = mean(arr[ring_mask_L_HD])
+			mass_l_hd = score(arr[dilated_mask_L_HD], hu_calcium, hu_heart_tissue_large_hd, voxel_size, ρ_calcium, VolumeFraction())
 
-            mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
+			## Medium Density
+			hu_heart_tissue_large_md = mean(arr[ring_mask_L_MD])
+			mass_l_md = score(arr[dilated_mask_L_MD], hu_calcium, hu_heart_tissue_large_md, voxel_size, ρ_calcium, VolumeFraction())
 
-            ## High Density
-            single_ring_mask_L_HD = Bool.(ring_mask_L_HD[:, :, 3])
-            s_bkg_L_HD = mean(single_arr[single_ring_mask_L_HD])
-            S_Obj_HD = intensity(800)
-            ρ_hd = 0.8 # mg/mm^3
-            alg_L_HD = Integrated(arr[mask_L_HD_3D])
-            mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
+			## Low Density
+			hu_heart_tissue_large_ld = mean(arr[ring_mask_L_LD])
+			mass_l_ld = score(arr[dilated_mask_L_LD], hu_calcium, hu_heart_tissue_large_ld, voxel_size, ρ_calcium, VolumeFraction())
 
-            ## Medium Density
-            single_ring_mask_L_MD = Bool.(ring_mask_L_MD[:, :, 3])
-            s_bkg_L_MD = mean(single_arr[single_ring_mask_L_MD])
-            S_Obj_MD = intensity(400)
-            ρ_md = 0.4 # mg/mm^3
-            alg_L_MD = Integrated(arr[mask_L_MD_3D])
-            mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
+			# Score Medium Inserts
+			## High Density
+			hu_heart_tissue_medium_hd = mean(arr[ring_mask_M_HD])
+			mass_m_hd = score(arr[dilated_mask_M_HD], hu_calcium, hu_heart_tissue_medium_hd, voxel_size, ρ_calcium, VolumeFraction())
 
-            ## Low Density
-            single_ring_mask_L_LD = Bool.(ring_mask_L_LD[:, :, 3])
-            s_bkg_L_LD = mean(single_arr[single_ring_mask_L_LD])
-            S_Obj_LD = intensity(200)
-            ρ_ld = 0.2 # mg/mm^3
-            alg_L_LD = Integrated(arr[mask_L_LD_3D])
-            mass_l_ld = score(s_bkg_L_LD, S_Obj_LD, pixel_size, ρ_ld, alg_L_LD)
+			## Medium Density
+			hu_heart_tissue_medium_md = mean(arr[ring_mask_M_MD])
+			mass_m_md = score(arr[dilated_mask_M_MD], hu_calcium, hu_heart_tissue_medium_md, voxel_size, ρ_calcium, VolumeFraction())
 
-            # Score Medium Inserts
-            ## High Density
-            single_ring_mask_M_HD = Bool.(ring_mask_M_HD[:, :, 3])
-            s_bkg_M_HD = mean(single_arr[single_ring_mask_M_HD])
-            alg_M_HD = Integrated(arr[mask_M_HD_3D])
-            mass_m_hd = score(s_bkg_M_HD, S_Obj_HD, pixel_size, ρ_hd, alg_M_HD)
+			## Low Density
+			hu_heart_tissue_medium_ld = mean(arr[ring_mask_M_LD])
+			mass_m_ld = score(arr[dilated_mask_M_LD], hu_calcium, hu_heart_tissue_medium_ld, voxel_size, ρ_calcium, VolumeFraction())
 
-            ## Medium Density
-            single_ring_mask_M_MD = Bool.(ring_mask_M_MD[:, :, 3])
-            s_bkg_M_MD = mean(single_arr[single_ring_mask_M_MD])
-            alg_M_MD = Integrated(arr[mask_M_MD_3D])
-            mass_m_md = score(s_bkg_M_MD, S_Obj_MD, pixel_size, ρ_md, alg_M_MD)
+			# Score Small Inserts
+			## High Density
+			hu_heart_tissue_small_hd = mean(arr[ring_mask_S_HD])
+			mass_s_hd = score(arr[dilated_mask_S_HD], hu_calcium, hu_heart_tissue_large_hd, voxel_size, ρ_calcium, VolumeFraction())
 
-            ## Low Density
-            single_ring_mask_M_LD = Bool.(ring_mask_M_LD[:, :, 3])
-            s_bkg_M_LD = mean(single_arr[single_ring_mask_M_LD])
-            alg_M_LD = Integrated(arr[mask_M_LD_3D])
-            mass_m_ld = score(s_bkg_M_LD, S_Obj_LD, pixel_size, ρ_ld, alg_M_LD)
+			## Medium Density
+			hu_heart_tissue_small_md = mean(arr[ring_mask_S_MD])
+			mass_s_md = score(arr[dilated_mask_S_MD], hu_calcium, hu_heart_tissue_large_md, voxel_size, ρ_calcium, VolumeFraction())
 
-
-            # Score Small Inserts
-            ## High Density
-            single_ring_mask_S_HD = Bool.(ring_mask_S_HD[:, :, 3])
-            s_bkg_S_HD = mean(single_arr[single_ring_mask_S_HD])
-            alg_S_HD = Integrated(arr[mask_S_HD_3D])
-            mass_s_hd = score(s_bkg_S_HD, S_Obj_HD, pixel_size, ρ_hd, alg_S_HD)
-
-            ## Medium Density
-            single_ring_mask_S_MD = Bool.(ring_mask_S_MD[:, :, 3])
-            s_bkg_S_MD = mean(single_arr[single_ring_mask_S_MD])
-            alg_S_MD = Integrated(arr[mask_S_MD_3D])
-            mass_s_md = score(s_bkg_S_MD, S_Obj_MD, pixel_size, ρ_md, alg_S_MD)
-
-            ## Low Density
-            single_ring_mask_S_LD = Bool.(ring_mask_S_LD[:, :, 3])
-            s_bkg_S_LD = mean(single_arr[single_ring_mask_S_LD])
-            alg_S_LD = Integrated(arr[mask_S_LD_3D])
-            mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_ld, alg_S_LD)
+			## Low Density
+			hu_heart_tissue_small_ld = mean(arr[ring_mask_S_LD])
+			mass_s_ld = score(arr[dilated_mask_S_LD], hu_calcium, hu_heart_tissue_large_ld, voxel_size, ρ_calcium, VolumeFraction())
 
             # Results
             density_array = [0, 200, 400, 800]
@@ -315,7 +277,7 @@ begin
                 calculated_mass_small=calculated_mass_small,
                 mass_bkg=mass_bkg
             )
-            push!(dfs_i, df)
+            push!(dfs_vf, df)
 
             #---------------- Agatston ----------------#
             # Mask Calibration Factor
@@ -449,40 +411,121 @@ begin
                 mass_cal_factor=mass_cal_factor
             )
             push!(dfs_a, df)
+
+			#---------------- SWCS ----------------#
+			μ, σ = mean(c_img[bool_arr_erode]) / 2, std(c_img[bool_arr_erode])
+			
+			# Background
+			alg2 = SpatiallyWeighted()
+
+			overlayed_mask_l_bkg = create_mask(arr, dilated_mask_L_bkg)
+			overlayed_mask_m_bkg = create_mask(arr, dilated_mask_M_bkg)
+			overlayed_mask_s_bkg = create_mask(arr, dilated_mask_S_bkg)
+
+			swcs_bkg_large = score(overlayed_mask_l_bkg, μ, σ, alg2)
+			swcs_bkg_medium = score(overlayed_mask_m_bkg, μ, σ, alg2)
+			swcs_bkg_small = score(overlayed_mask_s_bkg, μ, σ, alg2)
+
+			swcs_bkg = [swcs_bkg_large, swcs_bkg_medium, swcs_bkg_small]
+
+			# Score Large Inserts
+			## High Density
+			overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
+			swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
+
+			## Medium Density
+			overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
+			swcs_l_md = score(overlayed_mask_l_md, μ, σ, alg2)
+
+			## Low Density
+			overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
+			swcs_l_ld = score(overlayed_mask_l_ld, μ, σ, alg2)
+
+			# Score Medium Inserts
+			## High Density
+			overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
+			swcs_m_hd = score(overlayed_mask_m_hd, μ, σ, alg2)
+
+			## Medium Density
+			overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
+			swcs_m_md = score(overlayed_mask_m_md, μ, σ, alg2)
+
+			## Low Density
+			overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
+			swcs_m_ld = score(overlayed_mask_m_ld, μ, σ, alg2)
+
+			# Score Small Inserts
+			## High Density
+			overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
+			swcs_s_hd = score(overlayed_mask_s_hd, μ, σ, alg2)
+
+			## Medium Density
+			overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
+			swcs_s_md = score(overlayed_mask_s_md, μ, σ, alg2)
+
+			## Low Density
+			overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
+			swcs_s_ld = score(overlayed_mask_s_ld, μ, σ, alg2)
+
+			# Results
+			calculated_swcs_large = [swcs_l_ld, swcs_l_md, swcs_l_hd]
+			calculated_swcs_medium = [swcs_m_ld, swcs_m_md, swcs_m_hd]
+			calculated_swcs_small = [swcs_s_ld, swcs_s_md, swcs_s_hd]
+
+			df = DataFrame(;
+                vendor=VENDOR,
+                scan=scan,
+                inserts=inserts,
+				ground_truth_mass_large=ground_truth_mass_large,
+				ground_truth_mass_medium=ground_truth_mass_medium,
+				ground_truth_mass_small=ground_truth_mass_small,
+				calculated_swcs_large=calculated_swcs_large,
+				calculated_swcs_medium=calculated_swcs_medium,
+				calculated_swcs_small=calculated_swcs_small,
+				swcs_bkg=swcs_bkg
+			)
+			push!(dfs_s, df)
         end
     end
 end
 
-# ╔═╡ 9eb979d2-45f5-4960-bd73-32c469281e67
+# ╔═╡ 92401b3b-9c53-444d-aada-f444d64a291f
 md"""
 # Save Results
 """
 
-# ╔═╡ b91bbb38-3bd8-4a03-9710-8883ac9480f8
-dfs_i
+# ╔═╡ 1ba26f74-5228-4ce5-b60a-c15c75c2f26b
+dfs_vf
 
-# ╔═╡ 594c8fdf-9bc2-4f19-a560-d30bfd436ef9
+# ╔═╡ 6bc03a29-50a3-4203-ba77-9817fd9ce419
 dfs_a
 
-# ╔═╡ bbcd76e3-5111-471c-894c-6310bf24e565
+# ╔═╡ 40c32556-c3a7-4fda-8af7-f38360eca3fd
+dfs_s
+
+# ╔═╡ db469f7e-6f7d-4137-96cf-20c01a581770
 begin
-    dfs_i_tot = vcat(dfs_i[1:length(dfs_i)]...)
-    save(datadir("output", "integrated", "physical.csv"), dfs_i_tot)
+    dfs_vf_tot = vcat(dfs_vf[1:length(dfs_vf)]...)
+    save(datadir("rsna", "volume_fraction", "physical.csv"), dfs_vf_tot)
 
     dfs_a_tot = vcat(dfs_a[1:length(dfs_a)]...)
-    save(datadir("output", "agatston", "physical.csv"), dfs_a_tot)
+    save(datadir("rsna", "agatston", "physical.csv"), dfs_a_tot)
+	
+	dfs_s_tot = vcat(dfs_s[1:length(dfs_s)]...)
+    save(datadir("rsna", "swcs", "physical.csv"), dfs_s_tot)
 end
 
 # ╔═╡ Cell order:
-# ╠═ebdb7a8d-4c29-4d3e-8e4c-251094d0dff6
-# ╠═90ed04ab-5831-40ee-bc0b-e11a21f2f402
-# ╠═aa878542-adf8-49c0-b17d-aef779d0ba3e
-# ╠═f3b7ddf8-7d0f-4874-b71b-3f4e06b0a339
-# ╠═88e44dae-e8f7-4bb6-bb98-6d5bc5b7b1f2
-# ╠═da866599-e426-49d8-bf8b-0038aa0db264
-# ╠═58a98b14-521f-48fa-bebd-2275f660d9d8
-# ╠═ab4af475-a031-42d0-b8b0-f20d06b1ac57
-# ╟─9eb979d2-45f5-4960-bd73-32c469281e67
-# ╠═b91bbb38-3bd8-4a03-9710-8883ac9480f8
-# ╠═594c8fdf-9bc2-4f19-a560-d30bfd436ef9
-# ╠═bbcd76e3-5111-471c-894c-6310bf24e565
+# ╠═71942d1f-004f-4edc-af24-9a3d151679f3
+# ╠═05e5f4f8-9a11-40fb-9e4b-e15312ee6d59
+# ╠═800ad242-ede0-41ae-96b2-919fd369c302
+# ╠═b5eb5c10-b8ab-4e75-8901-bf29f3eefeeb
+# ╠═a0175742-d5d6-40a1-af64-f291ba962bb5
+# ╠═8932ed56-e47b-4f01-a417-f68a07ac2f47
+# ╠═31480286-9ca0-468f-893d-3f59600d2e16
+# ╠═624dec30-100b-4ebf-9b69-8507635ab1f1
+# ╟─92401b3b-9c53-444d-aada-f444d64a291f
+# ╠═1ba26f74-5228-4ce5-b60a-c15c75c2f26b
+# ╠═6bc03a29-50a3-4203-ba77-9817fd9ce419
+# ╠═40c32556-c3a7-4fda-8af7-f38360eca3fd
+# ╠═db469f7e-6f7d-4137-96cf-20c01a581770
